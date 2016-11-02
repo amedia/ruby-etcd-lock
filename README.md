@@ -26,15 +26,22 @@ Or install it yourself as:
 # Initialize a new coordinator for my application
 elc = Etcd::Lock::Coordinator.new('my-app')
 
-# Perform some work, using a lock that lives for 10 seconds to
+# Perform some work, using a lock that lives for 30 seconds to
 # ensure the job with not run anywhere else in that time period
-elc.run_with_lock('my-job', 10) do
-  perform_work
+elc.run('my-job', ttl: 30) do
+  perform_some_work
 end
+```
 
-# Perform some work, using a lock that lives for 1 hour or
-# until the job has finished running
-elc.run_with_lock('my-other-job', 3600, remove: true) do
-  perform_work
+If `ttl` is not specified, a default of _10 seconds_ will be used.
+
+Be default, the lock will live until the ttl expires, no matter how
+long the supplied block takes to run. If you want the lock to expire
+when the job is finished, use the `remove: true` parameter:
+
+```
+# Force the lock to expire as soon as the block has been executed
+elc.run('my-job', ttl: 3600, remove: true) do
+  perform_some_work
 end
 ```

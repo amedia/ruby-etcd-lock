@@ -17,9 +17,9 @@ module Etcd
         @etcd_port = ENV.fetch('ETCD_PORT', 4001)
       end
 
-      def run_with_lock(name, ttl, opts = {})
+      def run(name, opts = {})
         fail "Missing block!" unless block_given?
-        obtain_lock name, ttl
+        obtain_lock name, opts[:ttl]
         yield.tap do
           remove_lock name if opts[:remove]
         end
@@ -27,7 +27,7 @@ module Etcd
 
       private
 
-      def obtain_lock(name, ttl)
+      def obtain_lock(name, ttl = 10)
         Net::HTTP.start(@etcd_host, @etcd_port) do |http|
           req = Net::HTTP::Put.new("#{lock_path name}?prevExist=false")
           req.set_form_data value: @hostname, ttl: ttl
