@@ -39,9 +39,12 @@ Be default, the lock will live until the ttl expires, no matter how
 long the supplied block takes to run. If you want the lock to expire
 when the job is finished, use the `remove: true` parameter:
 
-```
+```ruby
 # Force the lock to expire as soon as the block has been executed
 elc.run('my-job', ttl: 3600, remove: true) do
   perform_some_work
 end
 ```
+
+Note: if the block raises an uncaught exception, the lock will persist
+until the ttl expires, even when `remove: true` is specified.

@@ -18,7 +18,17 @@ class Etcd::Lock::CoordinatorTest < Minitest::Test
   end
 
   def test_it_removes_lock_after
-    client.run('test3', ttl: 10, remove: true) { 2 + 2 }
+    client.run('test3', ttl: 2, remove: true) { 2 + 2 }
     assert_equal 6, client.run('test3', ttl: 1, remove: true) { 3 + 3 }
+  end
+
+  def test_it_lock_persists_if_block_raises
+    begin
+      client.run('test4', ttl: 2, remove: true) { raise "Shit happens." }
+    rescue
+    end
+    assert_raises(Etcd::Lock::LockExists) do
+      client.run('test4', ttl: 1, remove: true) { 3 + 3 }
+    end
   end
 end
