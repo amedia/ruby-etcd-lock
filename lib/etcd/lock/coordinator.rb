@@ -5,8 +5,9 @@ require "socket"
 module Etcd
   module Lock
 
-    LockExists = Class.new(StandardError)
-    LockFailed = Class.new(StandardError)
+    LockExists       = Class.new(StandardError)
+    LockFailed       = Class.new(StandardError)
+    LockRemoveFailed = Class.new(StandardError)
 
     class Coordinator
 
@@ -44,12 +45,21 @@ module Etcd
             raise LockFailed.new(response.body)
           end
         end
+      rescue => ex
+        case ex
+        when LockExists, LockFailed
+          raise ex
+        else
+          raise LockFailed.new(ex)
+        end
       end
 
       def remove_lock(name)
         Net::HTTP.start(@etcd_host, @etcd_port) do |http|
           http.delete lock_path(name)
         end
+      rescue => ex
+        raise LockRemoveFailed.new(ex)
       end
 
       def lock_path(name)
