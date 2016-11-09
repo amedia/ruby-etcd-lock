@@ -16,6 +16,7 @@ module Etcd
         @hostname  = Socket.gethostname || 'unknown'
         @etcd_host = ENV.fetch('ETCD_HOST', 'localhost')
         @etcd_port = ENV.fetch('ETCD_PORT', 4001)
+        @lock_nspc = ENV.fetch('ETCD_LOCK_NAMESPACE', 'lock-dev')
       end
 
       def run(name, opts = {})
@@ -63,7 +64,7 @@ module Etcd
       end
 
       def lock_path(name)
-        "/v2/keys/apps/#{@appname}/lock/#{name}"
+        "/v2/keys/apps/#{@appname}/#{@lock_nspc}/#{name}"
       end
     end
   end
