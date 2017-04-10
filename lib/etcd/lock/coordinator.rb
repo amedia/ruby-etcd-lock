@@ -11,6 +11,8 @@ module Etcd
 
     class Coordinator
 
+      DEFAULT_TTL = 10
+
       def initialize(appname)
         @appname   = appname
         @hostname  = Socket.gethostname || 'unknown'
@@ -21,7 +23,7 @@ module Etcd
 
       def run(name, opts = {})
         fail "Missing block!" unless block_given?
-        obtain_lock name, opts[:ttl]
+        obtain_lock name, opts.fetch(:ttl, DEFAULT_TTL)
         yield.tap do
           remove_lock name if opts[:remove]
         end
@@ -29,7 +31,7 @@ module Etcd
 
       private
 
-      def obtain_lock(name, ttl = 10)
+      def obtain_lock(name, ttl)
         Net::HTTP.start(@etcd_host, @etcd_port) do |http|
           req = Net::HTTP::Put.new("#{lock_path name}?prevExist=false")
           req.set_form_data value: @hostname, ttl: ttl
